@@ -24,8 +24,7 @@ Route::get('/dashboard', function () {
     }
 
     // Kalau bukan admin, tampilkan dashboard user biasa
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+    return view('dashboard');})->middleware(['auth', 'verified'])->name('dashboard');
 
 // Grup Route yang hanya bisa diakses jika sudah login
 Route::middleware(['auth'])->group(function () {
@@ -34,7 +33,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::patch('/', [ProfileController::class, 'update'])->name('update');
-        #Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
+        Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
     });
 
     // Formulir & Penyimpanan Pemesanan Wisma
