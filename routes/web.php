@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PemesananController;
 use App\Http\Controllers\Admin\PemesananAdminController;
+use App\Models\PaymentAccount;
 
 /*
 |--------------------------------------------------------------------------
@@ -11,53 +12,100 @@ use App\Http\Controllers\Admin\PemesananAdminController;
 |--------------------------------------------------------------------------
 */
 
-// Halaman Utama (Landing)
 Route::redirect('/', '/dashboard');
 
-// Dashboard setelah login
 Route::get('/dashboard', function () {
     $user = auth()->user();
 
-    // Jika admin, langsung arahkan ke dashboard admin
     if ($user->jenis_user === 'admin') {
         return redirect()->route('admin.dashboard');
     }
 
-    // Kalau bukan admin, tampilkan dashboard user biasa
-    return view('dashboard');})->middleware(['auth', 'verified'])->name('dashboard');
+    $statusLabels = [
+        'reservasi' => 'Reservasi',
+        'diproses' => 'Diproses',
+        'check_in' => 'Check In',
+        'check_out' => 'Check Out',
+    ];
 
-// Grup Route yang hanya bisa diakses jika sudah login
+    $paymentStatusLabels = [
+        'belum' => 'Belum Dibayar',
+        'menunggu_konfirmasi' => 'Menunggu Konfirmasi',
+        'selesai' => 'Pembayaran Selesai',
+    ];
+
+    $statusGuidance = [
+        'reservasi' => 'Permintaan terkirim. Menunggu evaluasi admin.',
+        'diproses' => 'Admin memeriksa ketersediaan kamar. Tunggu konfirmasi selanjutnya.',
+        'check_in' => 'Silakan lakukan check-in ke front office sesuai jadwal.',
+        'check_out' => 'Pemesanan selesai. Pastikan tidak ada barang tertinggal dan lakukan pembayaran bila belum.',
+    ];
+
+    $pemesananCollection = $user->pemesanan()->with('wisma')->orderByDesc('created_at')->get();
+
+    $statistik = [
+        'total' => $pemesananCollection->count(),
+    ];
+    foreach ($statusLabels as $status => $label) {
+        $statistik[$status] = $pemesananCollection->where('status', $status)->count();
+    }
+
+    $statistikPembayaran = [];
+    foreach ($paymentStatusLabels as $status => $label) {
+        $statistikPembayaran[$status] = $pemesananCollection->where('status_pembayaran', $status)->count();
+    }
+
+    $activeStatuses = ['reservasi', 'diproses', 'check_in'];
+    $activeBooking = $pemesananCollection->first(function ($item) use ($activeStatuses) {
+        return in_array($item->status, $activeStatuses, true);
+    });
+
+    $recentBookings = $pemesananCollection->take(5);
+    $progressSteps = array_keys($statusLabels);
+
+    $paymentAccounts = PaymentAccount::where('aktif', true)->orderBy('nama_bank')->get();
+
+    return view('dashboard', [
+        'statistik' => $statistik,
+        'statistikPembayaran' => $statistikPembayaran,
+        'statusLabels' => $statusLabels,
+        'paymentStatusLabels' => $paymentStatusLabels,
+        'activeBooking' => $activeBooking,
+        'recentBookings' => $recentBookings,
+        'statusGuidance' => $statusGuidance,
+        'progressSteps' => $progressSteps,
+        'paymentAccounts' => $paymentAccounts,
+    ]);
+})->middleware(['auth', 'verified'])->name('dashboard');
+
 Route::middleware(['auth'])->group(function () {
-
-    // Profil User
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::patch('/', [ProfileController::class, 'update'])->name('update');
         Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
     });
 
-    // Formulir & Penyimpanan Pemesanan Wisma
     Route::get('/pemesanan', [PemesananController::class, 'create'])->name('pemesanan.create');
     Route::post('/pemesanan', [PemesananController::class, 'store'])->name('pemesanan.store');
 
-    // ✅ Tambahan: Halaman Daftar Pemesanan Saya
     Route::get('/pemesanan/saya', [PemesananController::class, 'index'])->name('pemesanan.index');
+    Route::get('/pemesanan/saya/{pemesanan}', [PemesananController::class, 'show'])->name('pemesanan.show');
+    Route::post('/pemesanan/saya/{pemesanan}/upload-bukti', [PemesananController::class, 'uploadBukti'])->name('pemesanan.uploadBukti');
+    Route::get('/pemesanan/saya/{pemesanan}/bukti', [PemesananController::class, 'downloadBukti'])->name('pemesanan.downloadBukti');
+    Route::get('/pemesanan/saya/{pemesanan}/kuitansi', [PemesananController::class, 'downloadKuitansi'])->name('pemesanan.downloadKuitansi');
 });
 
-// ✅ Rute untuk ADMIN (akses hanya jika jenis_user = 'admin')
 Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
-    // ✅ Dashboard Statistik Admin
     Route::get('/dashboard', [PemesananAdminController::class, 'overview'])->name('dashboard');
 
-    // ✅ Halaman Daftar Semua Pemesanan (dipindah dari dashboard)
     Route::get('/pemesanan', [PemesananAdminController::class, 'index'])->name('pemesanan');
-
-    // ✅ Ubah status pemesanan
+    Route::get('/pemesanan/{id}', [PemesananAdminController::class, 'show'])->name('pemesanan.show');
+    Route::get('/pemesanan/{id}/bukti', [PemesananAdminController::class, 'downloadBukti'])->name('pemesanan.downloadBukti');
+    Route::get('/pemesanan/{id}/kuitansi', [PemesananAdminController::class, 'kuitansi'])->name('pemesanan.kuitansi');
+    Route::put('/pemesanan/{id}', [PemesananAdminController::class, 'updateDetail'])->name('pemesanan.update');
+    Route::post('/pemesanan/{id}/konfirmasi-pembayaran', [PemesananAdminController::class, 'konfirmasiPembayaran'])->name('pemesanan.konfirmasiPembayaran');
     Route::post('/pemesanan/{id}/ubah-status', [PemesananAdminController::class, 'ubahStatus'])->name('pemesanan.ubahStatus');
-
-    // ✅ Tambahan route untuk pembatalan
     Route::delete('/pemesanan/{id}/batalkan', [PemesananAdminController::class, 'batalkan'])->name('pemesanan.batalkan');
 });
-
-// Routing untuk autentikasi bawaan Laravel Breeze
 require __DIR__.'/auth.php';
+
