@@ -68,12 +68,28 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Lama Menginap (hari)</label>
-                    <input type="number" name="lama_menginap" class="mt-1 block w-full border-gray-300 rounded" value="{{ old('lama_menginap') }}" min="1" required>
+                    <label class="block text-sm font-medium text-gray-700">Tanggal Check In</label>
+                    <input type="date" name="check_in_at" class="mt-1 block w-full border-gray-300 rounded" value="{{ old('check_in_at') }}" required>
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Tanggal Check Out</label>
+                    <input type="date" name="check_out_at" class="mt-1 block w-full border-gray-300 rounded" value="{{ old('check_out_at') }}" required>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Jumlah Kamar</label>
                     <input type="number" name="jumlah_kamar" class="mt-1 block w-full border-gray-300 rounded" value="{{ old('jumlah_kamar') }}" min="1" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Metode Pembayaran</label>
+                    <select name="metode_pembayaran" class="mt-1 block w-full border-gray-300 rounded" required>
+                        <option value="">- Pilih Metode -</option>
+                        <option value="transfer" {{ old('metode_pembayaran') === 'transfer' ? 'selected' : '' }}>Transfer antar Bank</option>
+                        <option value="tunai" {{ old('metode_pembayaran') === 'tunai' ? 'selected' : '' }}>Uang Tunai/Cash</option>
+                        <option value="kartu" {{ old('metode_pembayaran') === 'kartu' ? 'selected' : '' }}>Kartu Kredit/Debit</option>
+                    </select>
                 </div>
             </div>
 

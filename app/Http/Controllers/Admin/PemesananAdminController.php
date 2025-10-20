@@ -26,7 +26,7 @@ class PemesananAdminController extends Controller
 
     public function overview()
     {
-        $semuaPemesanan = Pemesanan::all();
+        $semuaPemesanan = Pemesanan::with(['user', 'wisma'])->get();
 
         $statistik = [
             'total' => $semuaPemesanan->count(),
@@ -41,11 +41,32 @@ class PemesananAdminController extends Controller
             $statistikPembayaran[$status] = $semuaPemesanan->where('status_pembayaran', $status)->count();
         }
 
+        $recentBookings = Pemesanan::with(['user', 'wisma'])
+            ->orderByDesc('created_at')
+            ->take(5)
+            ->get();
+
+        $upcomingCheckins = Pemesanan::with(['user', 'wisma'])
+            ->whereNotNull('check_in_at')
+            ->whereDate('check_in_at', '>=', Carbon::today())
+            ->orderBy('check_in_at')
+            ->take(5)
+            ->get();
+
+        $pendingPayments = Pemesanan::with(['user', 'wisma'])
+            ->where('status_pembayaran', 'menunggu_konfirmasi')
+            ->orderByDesc('updated_at')
+            ->take(5)
+            ->get();
+
         return view('admin.dashboard', [
             'statistik'            => $statistik,
             'statusLabels'         => self::STATUS_OPTIONS,
             'statistikPembayaran'  => $statistikPembayaran,
             'pembayaranLabels'     => self::PAYMENT_STATUS_OPTIONS,
+            'recentBookings'       => $recentBookings,
+            'upcomingCheckins'     => $upcomingCheckins,
+            'pendingPayments'      => $pendingPayments,
         ]);
     }
 
@@ -56,6 +77,19 @@ class PemesananAdminController extends Controller
         return view('admin.pemesanan', [
             'semuaPemesanan'       => $semuaPemesanan,
             'statusOptions'        => self::STATUS_OPTIONS,
+            'paymentStatusOptions' => self::PAYMENT_STATUS_OPTIONS,
+        ]);
+    }
+
+    public function pendingPayments()
+    {
+        $pendingPayments = Pemesanan::with(['user', 'wisma'])
+            ->where('status_pembayaran', 'menunggu_konfirmasi')
+            ->orderByDesc('updated_at')
+            ->paginate(10);
+
+        return view('admin.pending-payments', [
+            'pendingPayments' => $pendingPayments,
             'paymentStatusOptions' => self::PAYMENT_STATUS_OPTIONS,
         ]);
     }
@@ -102,17 +136,19 @@ class PemesananAdminController extends Controller
         $pemesanan = Pemesanan::findOrFail($id);
         $pemesanan->status = $validated['status'];
         $pemesanan->catatan_admin = $validated['catatan_admin'] ?? null;
-        $pemesanan->metode_pembayaran = $validated['metode_pembayaran'] ?? null;
+        if ($pemesanan->metode_pembayaran === null && $request->filled('metode_pembayaran')) {
+            $pemesanan->metode_pembayaran = $validated['metode_pembayaran'];
+        }
         $pemesanan->status_pembayaran = $validated['status_pembayaran'];
         $pemesanan->total_biaya = $validated['total_biaya'] ?? null;
 
-        if ($request->has('check_in_at')) {
+        if ($request->has('check_in_at') && $pemesanan->check_in_at === null) {
             $pemesanan->check_in_at = $request->filled('check_in_at')
                 ? Carbon::parse($validated['check_in_at'])
                 : null;
         }
 
-        if ($request->has('check_out_at')) {
+        if ($request->has('check_out_at') && $pemesanan->check_out_at === null) {
             $pemesanan->check_out_at = $request->filled('check_out_at')
                 ? Carbon::parse($validated['check_out_at'])
                 : null;
@@ -142,7 +178,9 @@ class PemesananAdminController extends Controller
 
         $pemesanan = Pemesanan::findOrFail($id);
         $pemesanan->status_pembayaran = 'selesai';
-        $pemesanan->metode_pembayaran = $validated['metode_pembayaran'] ?? $pemesanan->metode_pembayaran;
+        if ($pemesanan->metode_pembayaran === null && $request->filled('metode_pembayaran')) {
+            $pemesanan->metode_pembayaran = $validated['metode_pembayaran'];
+        }
         $pemesanan->total_biaya = $validated['total_biaya'] ?? $pemesanan->total_biaya;
         $pemesanan->pembayaran_dikonfirmasi_at = now();
 
@@ -200,14 +238,12 @@ class PemesananAdminController extends Controller
         switch ($status) {
             case 'reservasi':
             case 'diproses':
-                $pemesanan->check_in_at = null;
-                $pemesanan->check_out_at = null;
+                // Biarkan tanggal yang ditentukan pengguna tetap tersimpan.
                 break;
             case 'check_in':
                 if ($autoFillTimestamps && ! $pemesanan->check_in_at) {
                     $pemesanan->check_in_at = now();
                 }
-                $pemesanan->check_out_at = null;
                 break;
             case 'check_out':
                 if ($autoFillTimestamps && ! $pemesanan->check_in_at) {

@@ -102,6 +102,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
     Route::get('/pemesanan/{id}', [PemesananAdminController::class, 'show'])->name('pemesanan.show');
     Route::get('/pemesanan/{id}/bukti', [PemesananAdminController::class, 'downloadBukti'])->name('pemesanan.downloadBukti');
     Route::get('/pemesanan/{id}/kuitansi', [PemesananAdminController::class, 'kuitansi'])->name('pemesanan.kuitansi');
+    Route::get('/pembayaran/menunggu', [PemesananAdminController::class, 'pendingPayments'])->name('pembayaran.pending');
     Route::put('/pemesanan/{id}', [PemesananAdminController::class, 'updateDetail'])->name('pemesanan.update');
     Route::post('/pemesanan/{id}/konfirmasi-pembayaran', [PemesananAdminController::class, 'konfirmasiPembayaran'])->name('pemesanan.konfirmasiPembayaran');
     Route::post('/pemesanan/{id}/ubah-status', [PemesananAdminController::class, 'ubahStatus'])->name('pemesanan.ubahStatus');

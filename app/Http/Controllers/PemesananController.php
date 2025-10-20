@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use App\Models\Pemesanan;
 use App\Models\Wisma;
 use App\Models\PaymentAccount;
@@ -59,9 +60,11 @@ class PemesananController extends Controller
         $validated = $request->validate([
             'id_wisma' => 'required|exists:wisma,id_wisma',
             'nama_kegiatan' => 'required|string|max:100',
-            'lama_menginap' => 'required|integer|min:1',
+            'metode_pembayaran' => 'required|in:transfer,tunai,kartu',
             'jumlah_kamar' => 'required|integer|min:1',
             'penanggung_jawab' => 'nullable|string|max:100',
+            'check_in_at' => 'required|date|after_or_equal:today',
+            'check_out_at' => 'required|date|after:check_in_at',
         ]);
 
         $statusAktif = ['reservasi', 'diproses', 'check_in'];
@@ -80,9 +83,17 @@ class PemesananController extends Controller
             'id_user' => Auth::id(),
             'id_wisma' => $validated['id_wisma'],
             'nama_kegiatan' => $validated['nama_kegiatan'],
-            'lama_menginap' => $validated['lama_menginap'],
+            'lama_menginap' => max(
+                1,
+                Carbon::parse($validated['check_in_at'])->startOfDay()->diffInDays(
+                    Carbon::parse($validated['check_out_at'])->startOfDay()
+                )
+            ),
             'jumlah_kamar' => $validated['jumlah_kamar'],
             'penanggung_jawab' => $validated['penanggung_jawab'] ?? null,
+            'metode_pembayaran' => $validated['metode_pembayaran'],
+            'check_in_at' => Carbon::parse($validated['check_in_at'])->setTime(14, 0, 0),
+            'check_out_at' => Carbon::parse($validated['check_out_at'])->setTime(12, 0, 0),
             'status' => 'reservasi',
         ]);
 
@@ -124,8 +135,8 @@ class PemesananController extends Controller
             abort(403);
         }
 
-        if (! in_array($pemesanan->status, ['diproses', 'check_in', 'check_out'], true)) {
-            return redirect()->back()->with('error', 'Bukti pembayaran hanya dapat diunggah setelah pemesanan diproses.');
+        if ($pemesanan->status !== 'check_in') {
+            return redirect()->back()->with('error', 'Bukti pembayaran hanya dapat diunggah saat status pemesanan sudah check in.');
         }
 
         $validated = $request->validate([

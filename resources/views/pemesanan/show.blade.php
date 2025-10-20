@@ -50,8 +50,20 @@
                 </div>
                 <div>
                     <p><span class="font-medium text-gray-900">Diajukan pada:</span> {{ optional($pemesanan->created_at)->format('d-m-Y H:i') }}</p>
-                    <p><span class="font-medium text-gray-900">Check In:</span> {{ optional($pemesanan->check_in_at)->format('d-m-Y H:i') ?? '-' }}</p>
-                    <p><span class="font-medium text-gray-900">Check Out:</span> {{ optional($pemesanan->check_out_at)->format('d-m-Y H:i') ?? '-' }}</p>
+                    <p><span class="font-medium text-gray-900">Check In:</span>
+                        @if($pemesanan->check_in_at)
+                            {{ $pemesanan->check_in_at->format('d-m-Y') }} pukul 14:00
+                        @else
+                            -
+                        @endif
+                    </p>
+                    <p><span class="font-medium text-gray-900">Check Out:</span>
+                        @if($pemesanan->check_out_at)
+                            {{ $pemesanan->check_out_at->format('d-m-Y') }} pukul 12:00
+                        @else
+                            -
+                        @endif
+                    </p>
                 </div>
             </div>
 
@@ -135,7 +147,7 @@
                 </div>
             @endif
 
-            @if(in_array($pemesanan->status, ['diproses', 'check_in', 'check_out']))
+            @if($pemesanan->status === 'check_in')
                 <div class="bg-white border border-gray-200 rounded p-4">
                     <p class="text-sm font-semibold text-gray-700 mb-2">Unggah Bukti Pembayaran</p>
                     <form action="{{ route('pemesanan.uploadBukti', $pemesanan) }}" method="POST" enctype="multipart/form-data" class="space-y-3">

@@ -97,31 +97,43 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <x-input-label for="check_in_at" value="Waktu Check In" />
-                            <input id="check_in_at"
-                                   name="check_in_at"
-                                   type="datetime-local"
-                                   value="{{ old('check_in_at', optional($pemesanan->check_in_at)->format('Y-m-d\TH:i')) }}"
-                                   class="mt-1 w-full border-gray-300 rounded" />
-                        </div>
-                        <div>
-                            <x-input-label for="check_out_at" value="Waktu Check Out" />
-                            <input id="check_out_at"
-                                   name="check_out_at"
-                                   type="datetime-local"
-                                   value="{{ old('check_out_at', optional($pemesanan->check_out_at)->format('Y-m-d\TH:i')) }}"
-                                   class="mt-1 w-full border-gray-300 rounded" />
-                        </div>
+                        <x-input-label for="check_in_at" value="Waktu Check In" />
+                        <input id="check_in_at"
+                               name="check_in_at"
+                               type="date"
+                               value="{{ old('check_in_at', optional($pemesanan->check_in_at)->format('Y-m-d')) }}"
+                               class="mt-1 w-full border-gray-300 rounded"
+                               @if($pemesanan->check_in_at) disabled @endif />
+                        @if($pemesanan->check_in_at)
+                            <p class="mt-1 text-xs text-gray-500">Tanggal ini ditentukan oleh pengguna dan tidak dapat diubah.</p>
+                        @endif
+                    </div>
+                    <div>
+                        <x-input-label for="check_out_at" value="Waktu Check Out" />
+                        <input id="check_out_at"
+                               name="check_out_at"
+                               type="date"
+                               value="{{ old('check_out_at', optional($pemesanan->check_out_at)->format('Y-m-d')) }}"
+                               class="mt-1 w-full border-gray-300 rounded"
+                               @if($pemesanan->check_out_at) disabled @endif />
+                        @if($pemesanan->check_out_at)
+                            <p class="mt-1 text-xs text-gray-500">Tanggal ini ditentukan oleh pengguna dan tidak dapat diubah.</p>
+                        @endif
+                    </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <x-input-label for="metode_pembayaran" value="Metode Pembayaran" />
-                            <input id="metode_pembayaran"
-                                   name="metode_pembayaran"
-                                   type="text"
-                                   value="{{ old('metode_pembayaran', $pemesanan->metode_pembayaran) }}"
-                                   class="mt-1 w-full border-gray-300 rounded" />
+                        <x-input-label for="metode_pembayaran" value="Metode Pembayaran" />
+                        <input id="metode_pembayaran"
+                               name="metode_pembayaran"
+                               type="text"
+                               value="{{ old('metode_pembayaran', $pemesanan->metode_pembayaran) }}"
+                               class="mt-1 w-full border-gray-300 rounded"
+                               @if($pemesanan->metode_pembayaran) readonly @endif />
+                        @if($pemesanan->metode_pembayaran)
+                            <p class="mt-1 text-xs text-gray-500">Metode pembayaran dipilih oleh pengguna dan tidak dapat diubah.</p>
+                        @endif
                         </div>
                         <div>
                             <x-input-label for="status_pembayaran" value="Status Pembayaran" />
