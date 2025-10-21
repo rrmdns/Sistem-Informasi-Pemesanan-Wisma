@@ -26,7 +26,7 @@
                             <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                                 <div>
                                     <p class="text-sm font-semibold text-amber-900">{{ $item->user->name ?? '-' }}</p>
-                                    <p class="text-xs text-amber-700">{{ $item->wisma->nama_wisma ?? '-' }} • {{ $item->nama_kegiatan }}</p>
+                                    <p class="text-xs text-amber-700">{{ $item->wisma->nama_wisma ?? '-' }} - {{ $item->nama_kegiatan }}</p>
                                     <p class="text-xs text-amber-700 mt-1">Diunggah: {{ optional($item->updated_at)->format('d M Y H:i') }}</p>
                                 </div>
                                 <div class="flex gap-2">

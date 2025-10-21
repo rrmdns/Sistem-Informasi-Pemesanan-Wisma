@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PemesananController;
 use App\Http\Controllers\Admin\PemesananAdminController;
 use App\Models\PaymentAccount;
+use App\Support\PemesananDictionary;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,25 +22,9 @@ Route::get('/dashboard', function () {
         return redirect()->route('admin.dashboard');
     }
 
-    $statusLabels = [
-        'reservasi' => 'Reservasi',
-        'diproses' => 'Diproses',
-        'check_in' => 'Check In',
-        'check_out' => 'Check Out',
-    ];
-
-    $paymentStatusLabels = [
-        'belum' => 'Belum Dibayar',
-        'menunggu_konfirmasi' => 'Menunggu Konfirmasi',
-        'selesai' => 'Pembayaran Selesai',
-    ];
-
-    $statusGuidance = [
-        'reservasi' => 'Permintaan terkirim. Menunggu evaluasi admin.',
-        'diproses' => 'Admin memeriksa ketersediaan kamar. Tunggu konfirmasi selanjutnya.',
-        'check_in' => 'Silakan lakukan check-in ke front office sesuai jadwal.',
-        'check_out' => 'Pemesanan selesai. Pastikan tidak ada barang tertinggal dan lakukan pembayaran bila belum.',
-    ];
+    $statusLabels = PemesananDictionary::statusLabels();
+    $paymentStatusLabels = PemesananDictionary::paymentStatusLabels();
+    $statusGuidance = PemesananDictionary::statusGuidance();
 
     $pemesananCollection = $user->pemesanan()->with('wisma')->orderByDesc('created_at')->get();
 
@@ -103,6 +88,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
     Route::get('/pemesanan/{id}/bukti', [PemesananAdminController::class, 'downloadBukti'])->name('pemesanan.downloadBukti');
     Route::get('/pemesanan/{id}/kuitansi', [PemesananAdminController::class, 'kuitansi'])->name('pemesanan.kuitansi');
     Route::get('/pembayaran/menunggu', [PemesananAdminController::class, 'pendingPayments'])->name('pembayaran.pending');
+    Route::get('/laporan/pemesanan-selesai', [PemesananAdminController::class, 'rekapSelesai'])->name('laporan.pemesananSelesai');
     Route::put('/pemesanan/{id}', [PemesananAdminController::class, 'updateDetail'])->name('pemesanan.update');
     Route::post('/pemesanan/{id}/konfirmasi-pembayaran', [PemesananAdminController::class, 'konfirmasiPembayaran'])->name('pemesanan.konfirmasiPembayaran');
     Route::post('/pemesanan/{id}/ubah-status', [PemesananAdminController::class, 'ubahStatus'])->name('pemesanan.ubahStatus');

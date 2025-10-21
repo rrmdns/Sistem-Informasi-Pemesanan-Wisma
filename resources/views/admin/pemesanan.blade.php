@@ -50,7 +50,7 @@
                                     <td class="px-4 py-3 align-top">
                                         <p class="font-medium text-gray-800">{{ $item->wisma->nama_wisma ?? '-' }}</p>
                                         <p class="text-xs text-gray-500">{{ $item->nama_kegiatan }}</p>
-                                        <p class="text-xs text-gray-400 mt-1">{{ $item->jumlah_kamar }} kamar • {{ $item->lama_menginap }} malam</p>
+                                        <p class="text-xs text-gray-400 mt-1">{{ $item->jumlah_kamar }} kamar {{ $item->lama_menginap }} malam</p>
                                     </td>
                                     <td class="px-4 py-3 align-top text-sm text-gray-600">
                                         <div>Check-in: {{ optional($item->check_in_at)->format('d M Y') ?? '-' }}</div>
@@ -94,7 +94,7 @@
                                             @csrf
                                             @method('DELETE')
                                             <button class="w-full px-2 py-1 bg-red-600 text-white text-xs font-semibold rounded hover:bg-red-700">
-                                                Batalkan
+                                                Batalkan/Hapus
                                             </button>
                                         </form>
                                     </td>

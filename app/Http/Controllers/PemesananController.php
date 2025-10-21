@@ -10,29 +10,11 @@ use Carbon\Carbon;
 use App\Models\Pemesanan;
 use App\Models\Wisma;
 use App\Models\PaymentAccount;
+use App\Notifications\BookingCreatedNotification;
+use App\Support\PemesananDictionary;
 
 class PemesananController extends Controller
 {
-    private const STATUS_LABELS = [
-        'reservasi' => 'Reservasi',
-        'diproses' => 'Diproses',
-        'check_in' => 'Check In',
-        'check_out' => 'Check Out',
-    ];
-
-    private const PAYMENT_STATUS_LABELS = [
-        'belum' => 'Belum Dibayar',
-        'menunggu_konfirmasi' => 'Menunggu Konfirmasi',
-        'selesai' => 'Pembayaran Selesai',
-    ];
-
-    private const STATUS_GUIDANCE = [
-        'reservasi' => 'Menunggu evaluasi dan konfirmasi dari admin.',
-        'diproses' => 'Permintaan Anda sedang diproses oleh admin.',
-        'check_in' => 'Silakan menuju front office dan siapkan bukti pembayaran.',
-        'check_out' => 'Terima kasih, pemesanan ini telah selesai.',
-    ];
-
     public function index()
     {
         $user = Auth::user();
@@ -40,10 +22,10 @@ class PemesananController extends Controller
 
         return view('pemesanan.index', [
             'pemesanan' => $pemesanan,
-            'statusLabels' => self::STATUS_LABELS,
-            'paymentStatusLabels' => self::PAYMENT_STATUS_LABELS,
-            'statusGuidance' => self::STATUS_GUIDANCE,
-            'progressSteps' => array_keys(self::STATUS_LABELS),
+            'statusLabels' => PemesananDictionary::statusLabels(),
+            'paymentStatusLabels' => PemesananDictionary::paymentStatusLabels(),
+            'statusGuidance' => PemesananDictionary::statusGuidance(),
+            'progressSteps' => array_keys(PemesananDictionary::statusLabels()),
         ]);
     }
 
@@ -79,7 +61,7 @@ class PemesananController extends Controller
                 ->withInput();
         }
 
-        Pemesanan::create([
+        $pemesanan = Pemesanan::create([
             'id_user' => Auth::id(),
             'id_wisma' => $validated['id_wisma'],
             'nama_kegiatan' => $validated['nama_kegiatan'],
@@ -97,6 +79,12 @@ class PemesananController extends Controller
             'status' => 'reservasi',
         ]);
 
+        $pemesanan->loadMissing('wisma');
+
+        if (Auth::user()->email) {
+            Auth::user()->notify(new BookingCreatedNotification($pemesanan));
+        }
+
         return redirect()->route('pemesanan.index')
             ->with('success', 'Pemesanan berhasil dibuat!');
     }
@@ -109,7 +97,7 @@ class PemesananController extends Controller
 
         $pemesanan->load('wisma');
 
-        $progressSteps = array_keys(self::STATUS_LABELS);
+        $progressSteps = array_keys(PemesananDictionary::statusLabels());
         $currentIndex = array_search($pemesanan->status, $progressSteps, true);
         $progressPercent = ($currentIndex !== false && count($progressSteps) > 1)
             ? round(($currentIndex / (count($progressSteps) - 1)) * 100)
@@ -119,9 +107,9 @@ class PemesananController extends Controller
 
         return view('pemesanan.show', [
             'pemesanan' => $pemesanan,
-            'statusLabels' => self::STATUS_LABELS,
-            'paymentStatusLabels' => self::PAYMENT_STATUS_LABELS,
-            'statusGuidance' => self::STATUS_GUIDANCE,
+            'statusLabels' => PemesananDictionary::statusLabels(),
+            'paymentStatusLabels' => PemesananDictionary::paymentStatusLabels(),
+            'statusGuidance' => PemesananDictionary::statusGuidance(),
             'progressSteps' => $progressSteps,
             'currentIndex' => $currentIndex === false ? null : $currentIndex,
             'progressPercent' => $progressPercent,

@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pemesanan;
+use App\Notifications\BookingCancelledNotification;
+use App\Notifications\BookingStatusUpdatedNotification;
+use App\Notifications\PaymentConfirmedNotification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -94,6 +97,30 @@ class PemesananAdminController extends Controller
         ]);
     }
 
+    public function rekapSelesai()
+    {
+        $pemesananSelesai = Pemesanan::with(['user', 'wisma'])
+            ->where('status', 'check_out')
+            ->orderByDesc('check_out_at')
+            ->get();
+
+        $totalMalam = $pemesananSelesai->sum('lama_menginap');
+        $totalKamar = $pemesananSelesai->sum('jumlah_kamar');
+        $totalPendapatan = $pemesananSelesai->sum(function ($item) {
+            return $item->total_biaya ?? 0;
+        });
+
+        $pdf = Pdf::loadView('admin.reports.completed-bookings', [
+            'pemesananSelesai' => $pemesananSelesai,
+            'totalMalam' => $totalMalam,
+            'totalKamar' => $totalKamar,
+            'totalPendapatan' => $totalPendapatan,
+            'generatedAt' => now(),
+        ])->setPaper('A4', 'landscape');
+
+        return $pdf->download('rekap-pemesanan-selesai-' . now()->format('Ymd_His') . '.pdf');
+    }
+
     public function show($id)
     {
         $pemesanan = Pemesanan::with(['user', 'wisma'])->findOrFail($id);
@@ -111,12 +138,18 @@ class PemesananAdminController extends Controller
             'status' => 'required|in:' . implode(',', array_keys(self::STATUS_OPTIONS)),
         ]);
 
-        $pemesanan = Pemesanan::findOrFail($id);
+        $pemesanan = Pemesanan::with('user')->findOrFail($id);
+        $pemesanan->loadMissing('wisma');
+        $oldStatus = $pemesanan->status;
         $pemesanan->status = $request->status;
 
         $this->applyStatusTransition($pemesanan, $request->status, true);
 
         $pemesanan->save();
+
+        if ($oldStatus !== $pemesanan->status && $pemesanan->user && $pemesanan->user->email) {
+            $pemesanan->user->notify(new BookingStatusUpdatedNotification($pemesanan, $oldStatus));
+        }
 
         return redirect()->back()->with('success', 'Status pemesanan berhasil diperbarui.');
     }
@@ -133,7 +166,10 @@ class PemesananAdminController extends Controller
             'total_biaya' => 'nullable|numeric|min:0',
         ]);
 
-        $pemesanan = Pemesanan::findOrFail($id);
+        $pemesanan = Pemesanan::with('user')->findOrFail($id);
+        $pemesanan->loadMissing('wisma');
+        $oldStatus = $pemesanan->status;
+        $oldPaymentStatus = $pemesanan->status_pembayaran;
         $pemesanan->status = $validated['status'];
         $pemesanan->catatan_admin = $validated['catatan_admin'] ?? null;
         if ($pemesanan->metode_pembayaran === null && $request->filled('metode_pembayaran')) {
@@ -163,6 +199,17 @@ class PemesananAdminController extends Controller
 
         $pemesanan->save();
 
+        if ($oldStatus !== $pemesanan->status && $pemesanan->user && $pemesanan->user->email) {
+            $pemesanan->user->notify(new BookingStatusUpdatedNotification($pemesanan, $oldStatus));
+        }
+
+        if ($oldPaymentStatus !== $pemesanan->status_pembayaran
+            && $pemesanan->status_pembayaran === 'selesai'
+            && $pemesanan->user
+            && $pemesanan->user->email) {
+            $pemesanan->user->notify(new PaymentConfirmedNotification($pemesanan));
+        }
+
         return redirect()
             ->route('admin.pemesanan.show', $pemesanan->id_pemesanan)
             ->with('success', 'Detail pemesanan diperbarui.');
@@ -176,7 +223,9 @@ class PemesananAdminController extends Controller
             'tandai_check_out' => 'nullable|boolean',
         ]);
 
-        $pemesanan = Pemesanan::findOrFail($id);
+        $pemesanan = Pemesanan::with('user')->findOrFail($id);
+        $pemesanan->loadMissing('wisma');
+        $oldPaymentStatus = $pemesanan->status_pembayaran;
         $pemesanan->status_pembayaran = 'selesai';
         if ($pemesanan->metode_pembayaran === null && $request->filled('metode_pembayaran')) {
             $pemesanan->metode_pembayaran = $validated['metode_pembayaran'];
@@ -190,6 +239,12 @@ class PemesananAdminController extends Controller
         }
 
         $pemesanan->save();
+
+        if ($oldPaymentStatus !== 'selesai'
+            && $pemesanan->user
+            && $pemesanan->user->email) {
+            $pemesanan->user->notify(new PaymentConfirmedNotification($pemesanan));
+        }
 
         return redirect()
             ->route('admin.pemesanan.show', $pemesanan->id_pemesanan)
@@ -227,7 +282,12 @@ class PemesananAdminController extends Controller
 
     public function batalkan($id)
     {
-        $pemesanan = Pemesanan::findOrFail($id);
+        $pemesanan = Pemesanan::with(['user', 'wisma'])->findOrFail($id);
+
+        if ($pemesanan->user && $pemesanan->user->email) {
+            $pemesanan->user->notify(new BookingCancelledNotification($pemesanan));
+        }
+
         $pemesanan->delete();
 
         return redirect()->back()->with('success', 'Pemesanan berhasil dibatalkan.');

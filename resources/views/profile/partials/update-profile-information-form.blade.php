@@ -19,7 +19,13 @@
 
         <div>
             <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" />
+            @if($user->jenis_user === 'admin')
+                <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)" required autocomplete="name" />
+                <p class="mt-1 text-xs text-gray-500">{{ __('Sesuaikan nama tampilan admin sesuai kebutuhan layanan.') }}</p>
+            @else
+                <x-text-input id="name" name="name" type="text" class="mt-1 block w-full bg-gray-100" :value="$user->name" readonly />
+                <p class="mt-1 text-xs text-gray-500">{{ __('Nama akun ditetapkan oleh admin. Hubungi admin jika perlu perubahan.') }}</p>
+            @endif
             <x-input-error class="mt-2" :messages="$errors->get('name')" />
         </div>
 

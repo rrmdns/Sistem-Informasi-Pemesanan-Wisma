@@ -10,7 +10,7 @@
             <div>
                 <p class="text-sm text-gray-500">Selamat datang kembali,</p>
                 <h1 class="text-2xl font-bold text-indigo-600">{{ Auth::user()->name }}</h1>
-                <p class="text-sm text-gray-600">Anda login sebagai <span class="font-semibold">{{ Auth::user()->jenis_user }}</span>{{ Auth::user()->departemen ? ' • Departemen ' . Auth::user()->departemen : '' }}</p>
+                <p class="text-sm text-gray-600">Anda login sebagai <span class="font-semibold">{{ Auth::user()->jenis_user }}</span>{{ Auth::user()->departemen ? ' Departemen ' . Auth::user()->departemen : '' }}</p>
             </div>
             <div class="flex gap-2">
                 <a href="{{ route('pemesanan.create') }}" class="px-4 py-2 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700">+ Buat Pemesanan</a>

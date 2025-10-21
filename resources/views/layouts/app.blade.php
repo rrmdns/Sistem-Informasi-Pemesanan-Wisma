@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
@@ -31,6 +31,14 @@
             <main>
                 {{ $slot }}
             </main>
+        </div>
+    </body>
+                <footer class="bg-gray-100 border-t border-gray-200">
+                    <div class="px-4 sm:px-6 lg:px-10 py-4 text-center text-xs text-gray-500">
+                        &copy; {{ now()->year }} Mahasiswa KP UIN Raden Fatah Palembang. All rights reserved.
+                    </div>
+                </footer>
+            </div>
         </div>
     </body>
 </html>

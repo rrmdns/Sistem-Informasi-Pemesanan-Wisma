@@ -34,6 +34,9 @@
                 <a href="{{ route('admin.pembayaran.pending') }}" class="inline-flex items-center justify-center px-4 py-2 bg-white border border-indigo-200 text-indigo-600 text-sm font-semibold rounded-lg hover:bg-indigo-50">
                     Lihat Pembayaran Pending
                 </a>
+                <a href="{{ route('admin.laporan.pemesananSelesai') }}" class="inline-flex items-center justify-center px-4 py-2 bg-white border border-emerald-200 text-emerald-600 text-sm font-semibold rounded-lg hover:bg-emerald-50">
+                    Unduh Rekap Selesai (PDF)
+                </a>
             </div>
         </div>
 

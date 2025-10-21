@@ -68,7 +68,7 @@
                             <tr class="hover:bg-gray-50">
                                 <td class="px-4 py-3">
                                     <div class="font-medium text-gray-900">{{ $item->wisma->nama_wisma ?? '-' }}</div>
-                                    <div class="text-xs text-gray-500">{{ $item->lama_menginap }} hari • {{ $item->jumlah_kamar }} kamar</div>
+                                    <div class="text-xs text-gray-500">{{ $item->lama_menginap }} hari {{ $item->jumlah_kamar }} kamar</div>
                                 </td>
                                 <td class="px-4 py-3 text-gray-700">{{ $item->nama_kegiatan }}</td>
                                 <td class="px-4 py-3">
