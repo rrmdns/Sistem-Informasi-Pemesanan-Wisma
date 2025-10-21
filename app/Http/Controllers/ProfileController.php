@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,8 +17,13 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
-        return view('profile.edit', [
+        $manageableUsers = collect();
+
+       return view('profile.edit', [
             'user' => $request->user(),
+            'manageableUsers' => $request->user()->jenis_user === 'admin'
+                ? User::orderBy('name')->get(['id_user', 'name', 'email'])
+                : $manageableUsers,
         ]);
     }
 
@@ -41,6 +47,22 @@ class ProfileController extends Controller
         $request->user()->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    }
+
+    public function updateUserName(Request $request): RedirectResponse
+    {
+        abort_unless($request->user()->jenis_user === 'admin', 403);
+
+        $validated = $request->validate([
+            'user_id' => ['required', 'exists:users,id_user'],
+            'name' => ['required', 'string', 'max:255'],
+        ]);
+
+        $target = User::findOrFail($validated['user_id']);
+        $target->name = $validated['name'];
+        $target->save();
+
+        return Redirect::route('profile.edit')->with('status', 'user-name-updated');
     }
 
     /**
