@@ -6,13 +6,8 @@
     </x-slot>
 
     @php
-        // Placeholder URL dapat diganti dengan URL gambar wisma nyata.
-        $placeholderImages = [
-            'https://images.unsplash.com/photo-1501117716987-c8e1ecb210af?auto=format&fit=crop&w=1200&q=80',
-            'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80',
-            'https://images.unsplash.com/photo-1505693416388-7e3d345394d4?auto=format&fit=crop&w=1200&q=80',
-            'https://images.unsplash.com/photo-1501117716987-c8e1ecb210af?auto=format&fit=crop&w=1200&q=80',
-        ];
+        // Placeholder tunggal, bisa diganti dengan foto wisma nyata.
+        $placeholderImage = 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80';
     @endphp
 
     <div class="py-8 max-w-7xl mx-auto space-y-6">
@@ -67,25 +62,27 @@
             @else
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     @foreach($visibleWisma as $index => $wisma)
-                        @php
-                            $imageUrl = $placeholderImages[$index % count($placeholderImages)];
-                        @endphp
                         <div class="border border-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition group">
                             <div class="relative h-48 bg-gray-200">
-                                <img src="{{ $imageUrl }}" alt="Gambar Wisma" class="w-full h-full object-cover transition duration-300 group-hover:scale-[1.02]">
+                                <img src="{{ $placeholderImage }}" alt="Gambar Wisma" class="w-full h-full object-cover transition duration-300 group-hover:scale-[1.02]">
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
                                 <div class="absolute bottom-3 left-3 text-white text-xs px-2 py-1 bg-black/40 rounded">
-                                    Placeholder Gambar
+                                    Gambar Wisma
                                 </div>
                             </div>
                             <div class="p-4 space-y-2">
                                 <h4 class="text-lg font-semibold text-gray-900">{{ $wisma->nama_wisma }}</h4>
-                                <p class="text-sm text-gray-600">Silakan ganti placeholder dengan foto wisma yang sesuai. Pengguna dapat lanjut memilih wisma ini untuk pemesanan.</p>
+                                <p class="text-sm text-gray-600">Layout ini bisa disesuaikan dengan foto wisma yang sesuai. Pengguna dapat lanjut memilih wisma ini untuk pemesanan.</p>
                                 <div class="flex items-center justify-between pt-2">
-                                    <a href="{{ route('pemesanan.create', ['wisma' => $wisma->id_wisma]) }}" class="inline-flex items-center px-3 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">
-                                        Pilih Wisma Ini
-                                    </a>
-                                    <span class="text-xs text-gray-500">ID: {{ $wisma->id_wisma }}</span>
+                                    <div class="flex items-center gap-2">
+                                        <a href="{{ route('wisma.show', $wisma) }}" class="inline-flex items-center px-3 py-2 text-sm font-semibold text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100">
+                                            Detail
+                                        </a>
+                                        <a href="{{ route('pemesanan.create', ['wisma' => $wisma->id_wisma]) }}" class="inline-flex items-center px-3 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">
+                                            Pilih Wisma Ini
+                                        </a>
+                                    </div>
+                                    <span class="text-xs text-gray-500 whitespace-nowrap">ID: {{ $wisma->id_wisma }}</span>
                                 </div>
                             </div>
                         </div>

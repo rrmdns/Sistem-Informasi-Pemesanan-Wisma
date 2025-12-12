@@ -82,6 +82,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pemesanan/saya/{pemesanan}/kuitansi', [PemesananController::class, 'downloadKuitansi'])->name('pemesanan.downloadKuitansi');
 
     Route::get('/wisma', [WismaController::class, 'index'])->name('wisma.index');
+    Route::get('/wisma/{wisma}', [WismaController::class, 'show'])->name('wisma.show');
 });
 
 Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
