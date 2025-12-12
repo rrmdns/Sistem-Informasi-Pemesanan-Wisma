@@ -32,7 +32,6 @@ class BookingCancelledNotification extends Notification
             ->line('Wisma: ' . ($pemesanan->wisma->nama_wisma ?? '-'))
             ->line('Nama kegiatan: ' . $pemesanan->nama_kegiatan)
             ->line('Tanggal check-in: ' . optional($pemesanan->check_in_at)->format('d M Y'))
-            ->line('Tanggal check-out: ' . optional($pemesanan->check_out_at)->format('d M Y'))
             ->line('Silakan coba memilih tanggal lain atau wisma lain yang masih tersedia. Jika membutuhkan bantuan, hubungi Front Office atau Pelayanan Umum.')
             ->action('Ajukan pemesanan baru', route('pemesanan.create'))
             ->line('Terima kasih atas pengertiannya.');

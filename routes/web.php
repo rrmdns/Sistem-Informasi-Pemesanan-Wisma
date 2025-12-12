@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PemesananController;
 use App\Http\Controllers\Admin\PemesananAdminController;
+use App\Http\Controllers\WismaController;
 use App\Models\PaymentAccount;
 use App\Support\PemesananDictionary;
 
@@ -79,6 +80,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/pemesanan/saya/{pemesanan}/upload-bukti', [PemesananController::class, 'uploadBukti'])->name('pemesanan.uploadBukti');
     Route::get('/pemesanan/saya/{pemesanan}/bukti', [PemesananController::class, 'downloadBukti'])->name('pemesanan.downloadBukti');
     Route::get('/pemesanan/saya/{pemesanan}/kuitansi', [PemesananController::class, 'downloadKuitansi'])->name('pemesanan.downloadKuitansi');
+
+    Route::get('/wisma', [WismaController::class, 'index'])->name('wisma.index');
 });
 
 Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -89,6 +92,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
     Route::get('/pemesanan/{id}/bukti', [PemesananAdminController::class, 'downloadBukti'])->name('pemesanan.downloadBukti');
     Route::get('/pemesanan/{id}/kuitansi', [PemesananAdminController::class, 'kuitansi'])->name('pemesanan.kuitansi');
     Route::get('/pembayaran/menunggu', [PemesananAdminController::class, 'pendingPayments'])->name('pembayaran.pending');
+    Route::get('/ekspor', [PemesananAdminController::class, 'exportDashboard'])->name('ekspor.dashboard');
     Route::get('/laporan/pemesanan-selesai', [PemesananAdminController::class, 'rekapSelesai'])->name('laporan.pemesananSelesai');
     Route::put('/pemesanan/{id}', [PemesananAdminController::class, 'updateDetail'])->name('pemesanan.update');
     Route::post('/pemesanan/{id}/konfirmasi-pembayaran', [PemesananAdminController::class, 'konfirmasiPembayaran'])->name('pemesanan.konfirmasiPembayaran');

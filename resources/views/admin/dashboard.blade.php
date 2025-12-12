@@ -19,6 +19,16 @@
                 'menunggu_konfirmasi' => ['bg' => 'bg-yellow-50', 'border' => 'border-yellow-200', 'text' => 'text-yellow-700'],
                 'selesai' => ['bg' => 'bg-emerald-50', 'border' => 'border-emerald-200', 'text' => 'text-emerald-700'],
             ];
+
+            $months = [
+                1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+            ];
+
+            $selectedMonth = (int) request('month', $defaultMonth ?? now()->month);
+            $selectedYear = (int) request('year', $defaultYear ?? now()->year);
+            $yearOptions = $availableYears ?? range(now()->year, now()->year + 1);
         @endphp
 
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -27,15 +37,15 @@
                 <h1 class="text-2xl font-bold text-gray-900 mt-1">Kelola reservasi Wisma dengan mudah</h1>
                 <p class="text-sm text-gray-600 mt-2">Lihat status terbaru pemesanan, konfirmasi pembayaran, dan pantau jadwal check-in secara real-time.</p>
             </div>
-            <div class="flex flex-col sm:flex-row gap-2">
+            <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
                 <a href="{{ route('admin.pemesanan') }}" class="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg shadow hover:bg-indigo-700">
                     Kelola Pemesanan
                 </a>
                 <a href="{{ route('admin.pembayaran.pending') }}" class="inline-flex items-center justify-center px-4 py-2 bg-white border border-indigo-200 text-indigo-600 text-sm font-semibold rounded-lg hover:bg-indigo-50">
                     Lihat Pembayaran Pending
                 </a>
-                <a href="{{ route('admin.laporan.pemesananSelesai') }}" class="inline-flex items-center justify-center px-4 py-2 bg-white border border-emerald-200 text-emerald-600 text-sm font-semibold rounded-lg hover:bg-emerald-50">
-                    Unduh Rekap Selesai (PDF)
+                <a href="{{ route('admin.ekspor.dashboard') }}" class="inline-flex items-center justify-center px-4 py-2 bg-white border border-emerald-200 text-emerald-600 text-sm font-semibold rounded-lg hover:bg-emerald-50">
+                    Dashboard Ekspor
                 </a>
             </div>
         </div>

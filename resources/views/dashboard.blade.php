@@ -15,6 +15,7 @@
             <div class="flex gap-2">
                 <a href="{{ route('pemesanan.create') }}" class="px-4 py-2 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700">+ Buat Pemesanan</a>
                 <a href="{{ route('pemesanan.index') }}" class="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Pemesanan Saya</a>
+                <a href="{{ route('wisma.index') }}" class="px-4 py-2 text-sm bg-white border border-indigo-200 text-indigo-600 rounded hover:bg-indigo-50">Lihat Wisma</a>
             </div>
         </div>
 

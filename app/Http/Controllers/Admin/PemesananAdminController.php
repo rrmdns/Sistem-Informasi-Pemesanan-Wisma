@@ -62,6 +62,10 @@ class PemesananAdminController extends Controller
             ->take(5)
             ->get();
 
+        $firstCheckoutDate = Pemesanan::min('check_out_at') ?? Pemesanan::min('created_at');
+        $startYear = $firstCheckoutDate ? Carbon::parse($firstCheckoutDate)->year : now()->year;
+        $availableYears = range($startYear, now()->year + 1);
+
         return view('admin.dashboard', [
             'statistik'            => $statistik,
             'statusLabels'         => self::STATUS_OPTIONS,
@@ -70,6 +74,9 @@ class PemesananAdminController extends Controller
             'recentBookings'       => $recentBookings,
             'upcomingCheckins'     => $upcomingCheckins,
             'pendingPayments'      => $pendingPayments,
+            'defaultMonth'         => now()->month,
+            'defaultYear'          => now()->year,
+            'availableYears'       => $availableYears,
         ]);
     }
 
@@ -97,10 +104,46 @@ class PemesananAdminController extends Controller
         ]);
     }
 
-    public function rekapSelesai()
+    public function exportDashboard()
     {
+        $firstCheckoutDate = Pemesanan::min('check_out_at') ?? Pemesanan::min('created_at');
+        $startYear = $firstCheckoutDate ? Carbon::parse($firstCheckoutDate)->year : now()->year;
+        $availableYears = range($startYear, now()->year + 1);
+
+        return view('admin.export-dashboard', [
+            'months' => [
+                1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+            ],
+            'defaultMonth' => now()->month,
+            'defaultYear' => now()->year,
+            'availableYears' => $availableYears,
+            'statusOptions' => self::STATUS_OPTIONS,
+            'paymentStatusOptions' => self::PAYMENT_STATUS_OPTIONS,
+        ]);
+    }
+
+    public function rekapSelesai(Request $request)
+    {
+        $month = (int) $request->query('month', now()->month);
+        $year = (int) $request->query('year', now()->year);
+
+        if ($month < 1 || $month > 12) {
+            abort(422, 'Bulan tidak valid.');
+        }
+
+        $currentYear = now()->year + 1;
+        if ($year < 2020 || $year > $currentYear) {
+            abort(422, 'Tahun tidak valid.');
+        }
+
+        $startDate = Carbon::create($year, $month, 1)->startOfMonth();
+        $endDate = (clone $startDate)->endOfMonth();
+
         $pemesananSelesai = Pemesanan::with(['user', 'wisma'])
             ->where('status', 'check_out')
+            ->whereBetween('check_out_at', [$startDate, $endDate])
             ->orderByDesc('check_out_at')
             ->get();
 
@@ -116,9 +159,12 @@ class PemesananAdminController extends Controller
             'totalKamar' => $totalKamar,
             'totalPendapatan' => $totalPendapatan,
             'generatedAt' => now(),
+            'periodLabel' => $startDate->translatedFormat('F Y'),
+            'periodStart' => $startDate,
+            'periodEnd' => $endDate,
         ])->setPaper('A4', 'landscape');
 
-        return $pdf->download('rekap-pemesanan-selesai-' . now()->format('Ymd_His') . '.pdf');
+        return $pdf->download('rekap-pemesanan-selesai-' . $startDate->format('Ym') . '.pdf');
     }
 
     public function show($id)

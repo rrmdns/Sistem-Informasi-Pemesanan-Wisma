@@ -20,6 +20,8 @@
 <body>
     <h1>Rekap Pemesanan Selesai</h1>
     <div class="meta">
+        <span>Periode: {{ $periodLabel ?? 'Semua Periode' }}</span>
+        <span>Rentang: {{ isset($periodStart) ? $periodStart->format('d M Y') : '-' }} - {{ isset($periodEnd) ? $periodEnd->format('d M Y') : '-' }}</span>
         <span>Tanggal Cetak: {{ $generatedAt->format('d M Y H:i') }} WIB</span>
         <span>Jumlah Data: {{ $pemesananSelesai->count() }}</span>
     </div>
